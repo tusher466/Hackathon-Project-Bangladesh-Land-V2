@@ -6,7 +6,7 @@
   <a href="https://hackathon-project-bangladesh-land-v.vercel.app/">
     <img src="https://img.shields.io/badge/🚀_Live_Demo-Visit_BILSP-0F766E?style=for-the-badge" alt="Live Demo" />
   </a>
-  <img src="https://img.shields.io/badge/Rights_Hackathon-2026-2563EB?style=for-the-badge" alt="Rights Hackathon 2026" />
+  <img src="https://img.shields.io/badge/Rights_Hackathon-2026-2563EB?style=for-the-badge" alt="Land Tech Hackathon 2026" />
   <img src="https://img.shields.io/badge/Interface-Bangla_%7C_English-9333EA?style=for-the-badge" alt="Bilingual Interface" />
   <img src="https://img.shields.io/badge/Status-Prototype-F59E0B?style=for-the-badge" alt="Prototype" />
 </p>
