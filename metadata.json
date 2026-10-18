@@ -1,0 +1,6 @@
+{
+  "name": "Bangladesh Integrated Land Services Portal (BILSP)",
+  "description": "A bilingual digital gateway unifying Bangladesh's land-sector websites, online services (khatian, mutation, ldtax, mouza maps), government departments, and verified public information in one consistent experience.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
