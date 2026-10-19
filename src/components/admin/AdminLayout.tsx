@@ -64,12 +64,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   onExitToPortal,
 }) => {
   const { language, toggleLanguage } = useLanguage();
-  const { currentUser, logout, hasPermission } = useAuth();
+  const { currentUser, logout, hasPermission, switchAdminWorkspace } = useAuth();
   const admin = currentUser as AdminUser;
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileDrawer, setShowProfileDrawer] = useState(false);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
 
   // Authority Theme Styling
   const getAuthorityBadge = () => {
@@ -109,11 +110,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
   const handleModuleClick = (modId: string, reqPerm?: string) => {
     if (reqPerm && !hasPermission(reqPerm)) {
-      alert(
+      setPermissionError(
         language === 'bn'
           ? 'অ্যাক্সেস নিয়ন্ত্রিত: আপনার ইউজার রোলে এই মডিউলটির জন্য প্রয়োজনীয় পারমিশন নেই।'
           : 'Access Denied: Your assigned role lacks explicit permission for this module.'
       );
+      setTimeout(() => setPermissionError(null), 4000);
       return;
     }
     setCurrentModule(modId);
@@ -299,8 +301,62 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             })}
           </nav>
 
+          {/* 3 Workspaces Direct Switcher */}
+          <div className="pt-3 border-t border-slate-100 space-y-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              {language === 'bn' ? 'প্রশাসনিক ৩টি ওয়ার্কস্পেস:' : '3 Admin Workspaces:'}
+            </span>
+
+            <div className="space-y-1 text-xs">
+              <button
+                type="button"
+                onClick={() => switchAdminWorkspace('CATEGORY_1_RECORDS_TAX')}
+                className={`w-full text-left p-2 rounded-xl transition-all font-semibold flex items-center justify-between border cursor-pointer ${
+                  authorityCode === 'MINLAND'
+                    ? 'bg-emerald-50 text-emerald-900 border-emerald-300 font-bold shadow-2xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <span>১. রেকর্ড, নামজারি ও কর</span>
+                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
+                  MINLAND
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => switchAdminWorkspace('CATEGORY_2_SURVEY_MAPPING')}
+                className={`w-full text-left p-2 rounded-xl transition-all font-semibold flex items-center justify-between border cursor-pointer ${
+                  authorityCode === 'DLRS'
+                    ? 'bg-sky-50 text-sky-900 border-sky-300 font-bold shadow-2xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <span>২. ভূমি জরিপ ও ম্যাপিং</span>
+                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-sky-100 text-sky-800">
+                  DLRS
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => switchAdminWorkspace('CATEGORY_3_DEED_REGISTRATION')}
+                className={`w-full text-left p-2 rounded-xl transition-all font-semibold flex items-center justify-between border cursor-pointer ${
+                  authorityCode === 'DOLR'
+                    ? 'bg-indigo-50 text-indigo-900 border-indigo-300 font-bold shadow-2xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <span>৩. দলিল রেজিস্ট্রি প্রশাসন</span>
+                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-800">
+                  DOLR
+                </span>
+              </button>
+            </div>
+          </div>
+
           {/* Quick Switch / Exit Back to Citizen Portal */}
-          <div className="pt-4 border-t border-slate-100 space-y-2">
+          <div className="pt-2 border-t border-slate-100 space-y-2">
             <button
               type="button"
               onClick={onExitToPortal}
@@ -313,7 +369,24 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         </aside>
 
         {/* Content Workspace Area */}
-        <main className="flex-1 w-full overflow-hidden">{children}</main>
+        <main className="flex-1 w-full overflow-hidden space-y-4">
+          {permissionError && (
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-center justify-between gap-2 shadow-xs animate-in fade-in">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span className="font-semibold">{permissionError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPermissionError(null)}
+                className="text-amber-700 hover:text-amber-900 font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+          {children}
+        </main>
       </div>
 
       {/* User Profile Modal / Drawer */}

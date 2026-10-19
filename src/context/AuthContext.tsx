@@ -35,8 +35,9 @@ interface AuthContextType {
   verifyCitizenOtpAndLogin: (recipient: string, otp: string) => Promise<{ success: boolean; error?: string; user?: CitizenUser }>;
   registerCitizen: (data: { name: string; mobile: string; email?: string; nid?: string; otp: string }) => Promise<{ success: boolean; error?: string; user?: CitizenUser }>;
 
-  // Admin Auth Methods
+  // Admin Auth & Workspace Switcher
   loginAdmin: (employeeId: string, password: string, otp2fa?: string) => Promise<{ success: boolean; error?: string; user?: AdminUser }>;
+  switchAdminWorkspace: (category: AdminCategory) => void;
 
   // Session & Access control
   logout: () => void;
@@ -286,6 +287,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { success: true, user: loggedInAdmin };
   };
 
+  const switchAdminWorkspace = (category: AdminCategory) => {
+    const targetUser = SEEDED_ADMIN_USERS.find((u) => u.category === category) || SEEDED_ADMIN_USERS[0];
+    setCurrentUser(targetUser);
+    try {
+      localStorage.setItem(STORAGE_KEY_AUTH, JSON.stringify(targetUser));
+    } catch {
+      //
+    }
+  };
+
   const logout = () => {
     setCurrentUser(null);
     setActiveOtpState(null);
@@ -321,6 +332,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         verifyCitizenOtpAndLogin,
         registerCitizen,
         loginAdmin,
+        switchAdminWorkspace,
         logout,
         hasPermission,
         clearMockOtp

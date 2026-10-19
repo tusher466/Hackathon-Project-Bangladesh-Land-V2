@@ -25,7 +25,10 @@ import {
   BANGLADESH_64_DISTRICTS_VECTORS,
   DistrictVector,
   BANGLADESH_DIVISIONS_CONFIG,
-  DivisionConfig
+  DivisionConfig,
+  BANGLADESH_AUTHENTIC_SILHOUETTE_PATH,
+  BANGLADESH_COASTAL_ISLANDS_PATHS,
+  BANGLADESH_MAJOR_RIVERS
 } from '../../data/districtVectorsData';
 import {
   COMPREHENSIVE_CADASTRAL_DAGS,
@@ -644,85 +647,182 @@ export const BangladeshInteractiveMap: React.FC<BangladeshInteractiveMapProps> =
               {/* Defs for gradients & filters */}
               <defs>
                 <filter id="activeGlow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#ef4444" floodOpacity="0.4" />
+                  <feDropShadow dx="0" dy="3" stdDeviation="5" floodColor="#ef4444" floodOpacity="0.45" />
+                </filter>
+                <filter id="hoverGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#0f172a" floodOpacity="0.3" />
                 </filter>
                 <filter id="divisionGlow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="2" stdDeviation="5" floodColor="#006a4e" floodOpacity="0.45" />
+                  <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#006a4e" floodOpacity="0.35" />
                 </filter>
+                <linearGradient id="bayOfBengalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#f0f9ff" stopOpacity="0.1" />
+                  <stop offset="40%" stopColor="#e0f2fe" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#bae6fd" stopOpacity="0.75" />
+                </linearGradient>
+                <linearGradient id="riverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#38bdf8" />
+                  <stop offset="100%" stopColor="#0284c7" />
+                </linearGradient>
               </defs>
 
+              {/* Bay of Bengal Sea Backdrop (Southern Coastal Region) */}
+              <rect x="0" y="670" width="750" height="280" fill="url(#bayOfBengalGrad)" rx="16" />
+              <text
+                x="330"
+                y="880"
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill="#0284c7"
+                fillOpacity="0.35"
+                fontSize="22"
+                fontWeight="900"
+                letterSpacing="6"
+                fontFamily="'Hind Siliguri', 'Inter', sans-serif"
+                className="select-none pointer-events-none"
+              >
+                বঙ্গোপসাগর • BAY OF BENGAL
+              </text>
+
+              {/* National Silhouette Shadow/Underglow for Elevation */}
+              <path
+                d={BANGLADESH_AUTHENTIC_SILHOUETTE_PATH}
+                fill="#000000"
+                fillOpacity="0.06"
+                transform="translate(4, 6)"
+              />
+
               {/* ========================================================
-                  LEVEL 1: RENDER 8 DIVISIONS ON FULL BANGLADESH MAP
+                  LEVEL 1: RENDER 8 CONTINUOUS DIVISIONS (EXACT BANGLADESH SHAPE)
                   ======================================================== */}
               {drillLevel === 'divisions' && (
                 <g className="divisions-layer">
-                  {/* Render Districts grouped by Division with distinct Division styling */}
+                  {/* 1. All 8 Authentic Divisions */}
                   {BANGLADESH_DIVISIONS_CONFIG.map((div) => {
                     const isHovered = hoveredDivisionId === div.id;
                     const isSelected = selectedDivisionId === div.id;
-                    const divDistricts = BANGLADESH_64_DISTRICTS_VECTORS.filter((d) => d.divisionId === div.id);
 
                     return (
                       <g
                         key={div.id}
-                        className="cursor-pointer transition-all"
+                        className="cursor-pointer transition-all duration-200"
                         onMouseEnter={() => setHoveredDivisionId(div.id)}
                         onMouseLeave={() => setHoveredDivisionId(null)}
                         onClick={() => handleDivisionClick(div.id)}
                       >
-                        {/* District Paths belonging to this division */}
-                        {divDistricts.map((dist) => (
-                          <path
-                            key={dist.id}
-                            d={dist.path}
-                            fill={isHovered ? div.color : div.color + 'dd'}
-                            stroke={isHovered ? '#0f172a' : div.borderColor}
-                            strokeWidth={isHovered ? 2.2 : 1.2}
-                            strokeLinejoin="round"
-                            strokeLinecap="round"
-                            className="transition-colors duration-150"
-                          />
-                        ))}
+                        {/* Authentic continuous Division Polygon */}
+                        <path
+                          d={div.path}
+                          fill={isHovered ? div.color : div.color + 'ee'}
+                          stroke={isHovered ? '#0f172a' : div.borderColor}
+                          strokeWidth={isHovered ? 3.5 : 2.2}
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                          filter={isHovered ? 'url(#hoverGlow)' : undefined}
+                          className="transition-all duration-150"
+                        />
+                      </g>
+                    );
+                  })}
 
-                        {/* Division Prominent Center Label & District Count */}
-                        <g transform={`translate(${div.centerX}, ${div.centerY})`} className="pointer-events-none select-none">
-                          <rect
-                            x="-68"
-                            y="-24"
-                            width="136"
-                            height="48"
-                            rx="12"
-                            fill="#ffffff"
-                            fillOpacity="0.95"
-                            stroke={div.borderColor}
-                            strokeWidth="2"
-                            filter="url(#divisionGlow)"
-                          />
-                          <text
-                            x="0"
-                            y="-6"
-                            textAnchor="middle"
-                            dominantBaseline="central"
-                            fill="#0f172a"
-                            fontSize="14"
-                            fontWeight="800"
-                            fontFamily="'Hind Siliguri', 'Inter', sans-serif"
-                          >
-                            {div.nameBn}
-                          </text>
-                          <text
-                            x="0"
-                            y="11"
-                            textAnchor="middle"
-                            dominantBaseline="central"
-                            fill="#475569"
-                            fontSize="10"
-                            fontWeight="700"
-                            fontFamily="'Hind Siliguri', 'Inter', sans-serif"
-                          >
-                            {toBnNum(div.districtsCount)} {language === 'bn' ? 'টি জেলা' : 'Districts'} • {toBnNum(div.upazilasCount)} {language === 'bn' ? 'উপজেলা' : 'Upz'}
-                          </text>
-                        </g>
+                  {/* 2. Coastal Islands (Bhola, Hatia, Sandwip, Manpura, Kutubdia, St. Martin's) */}
+                  <g className="coastal-islands-group">
+                    {BANGLADESH_COASTAL_ISLANDS_PATHS.map((island) => (
+                      <path
+                        key={island.id}
+                        d={island.path}
+                        fill="#34d399"
+                        stroke="#047857"
+                        strokeWidth="1.5"
+                        strokeLinejoin="round"
+                        className="hover:fill-emerald-400 transition-colors cursor-pointer"
+                      >
+                        <title>{island.nameBn}</title>
+                      </path>
+                    ))}
+                  </g>
+
+                  {/* 3. Major Rivers across Bangladesh (Padma, Jamuna, Meghna, Karnaphuli) */}
+                  <g className="rivers-group pointer-events-none">
+                    {BANGLADESH_MAJOR_RIVERS.map((river) => (
+                      <g key={river.id}>
+                        <path
+                          d={river.path}
+                          fill="none"
+                          stroke="#0284c7"
+                          strokeWidth={river.width}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          opacity="0.85"
+                        />
+                        <text
+                          x={river.labelX}
+                          y={river.labelY}
+                          fill="#0369a1"
+                          fontSize="9"
+                          fontWeight="700"
+                          fontFamily="'Hind Siliguri', 'Inter', sans-serif"
+                          style={{
+                            textShadow: '0 0 3px #ffffff, 0 0 5px #ffffff'
+                          }}
+                        >
+                          {river.nameBn}
+                        </text>
+                      </g>
+                    ))}
+                  </g>
+
+                  {/* 4. Division Floating Centroid Badges */}
+                  {BANGLADESH_DIVISIONS_CONFIG.map((div) => {
+                    const isHovered = hoveredDivisionId === div.id;
+
+                    return (
+                      <g
+                        key={`label-${div.id}`}
+                        transform={`translate(${div.centerX}, ${div.centerY})`}
+                        onClick={() => handleDivisionClick(div.id)}
+                        className="cursor-pointer select-none transition-transform duration-150"
+                        style={{
+                          transform: `translate(${div.centerX}px, ${div.centerY}px) scale(${isHovered ? 1.08 : 1.0})`,
+                          transformOrigin: '0 0'
+                        }}
+                      >
+                        <rect
+                          x="-68"
+                          y="-24"
+                          width="136"
+                          height="48"
+                          rx="14"
+                          fill="#ffffff"
+                          fillOpacity={isHovered ? 1 : 0.94}
+                          stroke={isHovered ? '#0f172a' : div.borderColor}
+                          strokeWidth={isHovered ? 2.8 : 2.0}
+                          filter="url(#divisionGlow)"
+                        />
+                        <text
+                          x="0"
+                          y="-6"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          fill="#0f172a"
+                          fontSize="14"
+                          fontWeight="800"
+                          fontFamily="'Hind Siliguri', 'Inter', sans-serif"
+                        >
+                          {div.nameBn}
+                        </text>
+                        <text
+                          x="0"
+                          y="11"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          fill={div.borderColor}
+                          fontSize="10"
+                          fontWeight="800"
+                          fontFamily="'Hind Siliguri', 'Inter', sans-serif"
+                        >
+                          {toBnNum(div.districtsCount)} {language === 'bn' ? 'টি জেলা' : 'Districts'} • {toBnNum(div.upazilasCount)} {language === 'bn' ? 'উপজেলা' : 'Upz'}
+                        </text>
                       </g>
                     );
                   })}
@@ -734,33 +834,41 @@ export const BangladeshInteractiveMap: React.FC<BangladeshInteractiveMapProps> =
                   ======================================================== */}
               {(drillLevel === 'districts' || drillLevel === 'upazilas') && (
                 <g className="division-districts-layer">
-                  {/* Surrounding background districts (dimmed for focus) */}
-                  {BANGLADESH_64_DISTRICTS_VECTORS.filter((d) => d.divisionId !== selectedDivisionId).map((dist) => (
+                  {/* Surrounding background divisions (subtle muted context to keep full Bangladesh shape visible) */}
+                  {BANGLADESH_DIVISIONS_CONFIG.filter((d) => d.id !== selectedDivisionId).map((otherDiv) => (
                     <path
-                      key={dist.id}
-                      d={dist.path}
+                      key={otherDiv.id}
+                      d={otherDiv.path}
                       fill="#f1f5f9"
                       stroke="#cbd5e1"
-                      strokeWidth="0.8"
-                      strokeDasharray="2 2"
-                      opacity="0.6"
-                      onClick={() => handleDistrictClick(dist.id)}
+                      strokeWidth="1.2"
+                      strokeDasharray="3 3"
+                      opacity="0.65"
+                      onClick={() => handleDivisionClick(otherDiv.id)}
                       className="cursor-pointer hover:opacity-90 transition-opacity"
                     />
                   ))}
+
+                  {/* Active Division Outer Boundary Spotlight */}
+                  <path
+                    d={currentDivisionConfig.path}
+                    fill={currentDivisionConfig.color + '22'}
+                    stroke={currentDivisionConfig.borderColor}
+                    strokeWidth="3.2"
+                    className="pointer-events-none"
+                  />
 
                   {/* Active Division's Districts — Clearly separated by bold district borders! */}
                   {currentDivisionDistricts.map((dist) => {
                     const isSelected = selectedDistrictId === dist.id;
                     const isHovered = hoveredDistrictId === dist.id;
 
-                    // District coloring: Reference image style has crisp fills with coral/red highlight on selection!
-                    let fillColor = '#e2e8f0'; // Default clean administrative fill
-                    if (isHovered) fillColor = '#cbd5e1';
+                    let fillColor = '#ffffff';
+                    if (isHovered) fillColor = '#fee2e2';
                     if (isSelected) fillColor = '#ef4444'; // Red/coral highlight matching uploaded image!
 
-                    const strokeColor = isSelected ? '#b91c1c' : '#334155'; // Bold distinct border
-                    const strokeWidth = isSelected ? 3.0 : 1.8;
+                    const strokeColor = isSelected ? '#b91c1c' : '#334155';
+                    const strokeWidth = isSelected ? 3.2 : 1.8;
 
                     return (
                       <g
@@ -784,20 +892,26 @@ export const BangladeshInteractiveMap: React.FC<BangladeshInteractiveMapProps> =
                         {/* District Centroid Bengali Label & Upazila Count */}
                         {showDistrictLabels && (
                           <g transform={`translate(${dist.centerX}, ${dist.centerY})`} className="pointer-events-none select-none">
+                            <rect
+                              x="-42"
+                              y={isSelected ? -18 : -11}
+                              width="84"
+                              height={isSelected ? 36 : 22}
+                              rx="8"
+                              fill={isSelected ? '#b91c1c' : '#ffffff'}
+                              fillOpacity={isSelected ? 0.95 : 0.92}
+                              stroke={isSelected ? '#ffffff' : '#94a3b8'}
+                              strokeWidth={isSelected ? 1.5 : 0.8}
+                            />
                             <text
                               x="0"
-                              y={isSelected ? -6 : 0}
+                              y={isSelected ? -5 : 0}
                               textAnchor="middle"
                               dominantBaseline="central"
                               fill={isSelected ? '#ffffff' : '#0f172a'}
-                              fontSize={isSelected ? 13 : 11}
-                              fontWeight={isSelected ? 800 : 700}
+                              fontSize={isSelected ? 12 : 11}
+                              fontWeight={isSelected ? 900 : 700}
                               fontFamily="'Hind Siliguri', 'Inter', sans-serif"
-                              style={{
-                                textShadow: isSelected
-                                  ? '0 1px 2px rgba(0,0,0,0.7)'
-                                  : '0 0 3px rgba(255,255,255,0.95), 0 0 5px rgba(255,255,255,0.95)'
-                              }}
                             >
                               {dist.nameBn}
                             </text>
@@ -807,11 +921,10 @@ export const BangladeshInteractiveMap: React.FC<BangladeshInteractiveMapProps> =
                                 y="8"
                                 textAnchor="middle"
                                 dominantBaseline="central"
-                                fill="#ffffff"
+                                fill="#fef08a"
                                 fontSize="9"
-                                fontWeight="700"
+                                fontWeight="800"
                                 fontFamily="'Hind Siliguri', 'Inter', sans-serif"
-                                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.7)' }}
                               >
                                 {toBnNum(dist.upazilasCount)} {language === 'bn' ? 'উপজেলা' : 'Upazilas'}
                               </text>
@@ -821,8 +934,44 @@ export const BangladeshInteractiveMap: React.FC<BangladeshInteractiveMapProps> =
                       </g>
                     );
                   })}
+
+                  {/* Coastal Islands and Rivers in Level 2 as well */}
+                  <g className="coastal-islands-group pointer-events-none">
+                    {BANGLADESH_COASTAL_ISLANDS_PATHS.map((island) => (
+                      <path
+                        key={`l2-${island.id}`}
+                        d={island.path}
+                        fill="#34d399"
+                        stroke="#047857"
+                        strokeWidth="1.2"
+                      />
+                    ))}
+                  </g>
+                  <g className="rivers-group pointer-events-none">
+                    {BANGLADESH_MAJOR_RIVERS.map((river) => (
+                      <path
+                        key={`l2-${river.id}`}
+                        d={river.path}
+                        fill="none"
+                        stroke="#0284c7"
+                        strokeWidth={river.width * 0.8}
+                        strokeLinecap="round"
+                        opacity="0.6"
+                      />
+                    ))}
+                  </g>
                 </g>
               )}
+
+              {/* Geographic Cartographic Legend & North Arrow in Corner */}
+              <g transform="translate(685, 60)" className="pointer-events-none select-none">
+                <circle cx="0" cy="0" r="18" fill="#ffffff" stroke="#006a4e" strokeWidth="1.5" />
+                <path d="M 0 -13 L 5 4 L 0 1 L -5 4 Z" fill="#ef4444" />
+                <path d="M 0 13 L 5 4 L 0 1 L -5 4 Z" fill="#94a3b8" />
+                <text x="0" y="-15" textAnchor="middle" fill="#ef4444" fontSize="9" fontWeight="900">
+                  N
+                </text>
+              </g>
             </svg>
 
             {/* Bottom Floating Legend & Quick Jump Bar */}

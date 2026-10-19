@@ -114,6 +114,8 @@ export interface DemoParcel {
   mouzaJlNo: string;
   plotDagNo: string;
   areaDecimals: number;
+  areaKatha?: number;
+  upazilaNameBn?: string;
   landClassBn: string;
   landClassEn: string;
   coordinates: [number, number][]; // Polygon vertices on local canvas [x, y]
@@ -214,14 +216,17 @@ export interface MutationApplication {
   applicantNameBn: string;
   applicantNameEn: string;
   applicantMobile: string;
+  applicantNid?: string;
   divisionId: string;
   districtId: string;
   upazilaId: string;
   mouzaNameBn: string;
+  mouzaNameEn?: string;
   khatianNo: string;
   dagNo: string;
   areaDecimals: number;
   applicationDate: string;
+  submissionDate?: string;
   status: 'PENDING_INSPECTION' | 'HEARING_SCHEDULED' | 'APPROVED' | 'DCR_ISSUED' | 'REJECTED';
   hearingDate?: string;
   statutoryFeePaidBdt: number;
@@ -247,8 +252,9 @@ export interface LandTaxRecord {
 export interface CadastralSheetRecord {
   id: string;
   sheetNo: string;
+  districtId?: string;
   mouzaNameBn: string;
-  mouzaNameEn: string;
+  mouzaNameEn?: string;
   jlNo: string;
   upazilaId: string;
   surveyType: SurveyType;
@@ -256,30 +262,32 @@ export interface CadastralSheetRecord {
   scale: string;
   digitizedDate: string;
   qualityScorePercent: number;
-  topologicalIntegrity: 'PASS' | 'WARNING' | 'NEEDS_RECHECK';
-  geoReferenced: boolean;
-  parcelsCount: number;
+  topologicalIntegrity: 'PASS' | 'WARNING' | 'NEEDS_RECHECK' | 'VERIFIED';
+  geoReferenced?: boolean;
+  parcelsCount?: number;
 }
 
 // Admin Category 3: Deed Registration Demo Records
 export interface DeedRecord {
   id: string;
   deedNo: string;
-  deedYear: string;
+  deedYear?: string;
   deedTypeBn: string;
-  deedTypeEn: string;
+  deedTypeEn?: string;
   subRegistryOfficeBn: string;
-  subRegistryOfficeEn: string;
+  subRegistryOfficeEn?: string;
   districtId: string;
+  upazilaId?: string;
   executantNameBn: string; // Seller/Donor
   claimantNameBn: string;  // Buyer/Donee
   mouzaNameBn: string;
   dagNo: string;
+  khatianNo?: string;
   deedValueBdt: number;
   stampDutyBdt: number;
-  registrationFeeBdt: number;
+  registrationFeeBdt?: number;
   registrationDate: string;
   linkedParcelId?: string;
   isLinkedToACLand: boolean;
-  verificationStatus: 'VERIFIED' | 'PENDING_AUDIT';
+  verificationStatus?: 'VERIFIED' | 'PENDING_AUDIT';
 }

@@ -40,8 +40,9 @@ import { SurveyAndMappingWorkspace } from './components/admin/workspaces/SurveyA
 import { DeedRegistrationWorkspace } from './components/admin/workspaces/DeedRegistrationWorkspace';
 import { LandAIAssistantModal } from './components/ai/LandAIAssistantModal';
 import { BhumiSutraView } from './components/BhumiSutraView';
+import { BangladeshInteractiveMap } from './components/citizen/BangladeshInteractiveMap';
 
-import { PhoneCall, ExternalLink, CheckCircle2, ShieldCheck, Clock, Globe, Bot, Sparkles } from 'lucide-react';
+import { PhoneCall, ExternalLink, CheckCircle2, ShieldCheck, Clock, Globe, Bot, Sparkles, Map } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
   const { language, t, toBnNum } = useLanguage();
@@ -181,6 +182,39 @@ const MainAppContent: React.FC = () => {
               onToggleSave={handleToggleSave}
             />
 
+            {/* Interactive Cadastral Map Section */}
+            <section className="py-10 max-w-7xl mx-auto px-4 sm:px-6">
+              <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#006a4e] uppercase tracking-wider mb-1">
+                    <Map className="w-4 h-4" />
+                    <span>{language === 'bn' ? 'জাতীয় ক্যাডাস্ট্রাল জিও-পোর্টাল' : 'National Cadastral Geoportal'}</span>
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900">
+                    {language === 'bn' ? 'বাংলাদেশের আসল ভৌগোলিক মানচিত্র ও খতিয়ান (৮ বিভাগ)' : 'Authentic Bangladesh Map & Cadastral Records'}
+                  </h2>
+                  <p className="text-xs text-slate-600 mt-1">
+                    {language === 'bn'
+                      ? '৮টি প্রশাসনিক বিভাগ, ৬৪টি জেলা ও ৪৯৫টি উপজেলার আসল সীমানা এবং সিএস, এসএ, আরএস ও বিএস দাগ অনুসন্ধান।'
+                      : 'Explore authentic borders of 8 divisions, 64 districts, 495 upazilas and CS/SA/RS cadastral surveys.'}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentView('interactive-map')}
+                    className="px-4 py-2 rounded-xl bg-[#006a4e] hover:bg-emerald-800 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span>{language === 'bn' ? 'পূর্ণাঙ্গ মানচিত্র হাব' : 'Full Screen Map View'}</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <BangladeshInteractiveMap />
+            </section>
+
             {/* 3. Browse by Task ("আপনি কী করতে চান?") */}
             <TaskBrowser
               services={services}
@@ -258,6 +292,40 @@ const MainAppContent: React.FC = () => {
         )}
 
         {currentView === 'offices' && <LandOfficeFinder />}
+
+        {currentView === 'interactive-map' && (
+          <div className="py-8 px-4 sm:px-6 max-w-7xl mx-auto space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-[#005a3e] to-[#004d36] text-white p-6 rounded-2xl shadow-md border border-emerald-700">
+              <div className="space-y-1">
+                <span className="text-[11px] uppercase font-black tracking-widest text-emerald-300">
+                  NATIONAL CADASTRAL GEOPORTAL
+                </span>
+                <h1 className="text-2xl font-black">
+                  {language === 'bn' ? 'বাংলাদেশ ইন্টারেক্টিভ ল্যান্ড ম্যাপ ও খতিয়ান হাব' : 'Bangladesh Interactive Land & Cadastral Hub'}
+                </h1>
+                <p className="text-xs text-emerald-100 max-w-2xl leading-relaxed">
+                  {language === 'bn'
+                    ? 'আসল ভৌগোলিক আকৃতি অক্ষুণ্ন রেখে ৩-স্তরের ড্রিল-ডাউন: ৮টি প্রশাসনিক বিভাগ ➔ ৬৪টি জেলা ➔ ৪৯৫টি উপজেলা এবং সিএস (CS), এসএ (SA), আরএস (RS) ও বিএস (BS) দাগ রেকর্ড অনুসন্ধান।'
+                    : 'Authentic 3-tier cadastral drilldown: 8 administrative divisions, 64 districts, and Upazilas with complete CS, SA, RS survey dag lineage.'}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentView('bhumisutra')}
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>{language === 'bn' ? 'ভূমিসূত্রে যান' : 'Go to BhumiSutra'}</span>
+                  <ExternalLink className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+
+            <BangladeshInteractiveMap />
+          </div>
+        )}
 
         {currentView === 'bhumisutra' && (
           <BhumiSutraView onBackToPortal={() => setCurrentView('home')} />

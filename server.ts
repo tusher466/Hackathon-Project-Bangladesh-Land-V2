@@ -8,8 +8,13 @@
 import express, { Request, Response } from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import dns from 'dns';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
+
+// Ensure IPv4 first on Linux container to prevent connection hangs
+dns.setDefaultResultOrder('ipv4first');
+
 import {
   LAND_SERVICES,
   CATEGORIES,
@@ -165,76 +170,187 @@ app.get('/api/services/:id', (req: Request, res: Response) => {
   res.json(service);
 });
 
-// Safe URL Availability Checker (Strict SSRF Protection)
+// Mock Ping Diagnostics Endpoints for testing down & error conditions deterministically
+app.all('/api/mock-ping/:code', (req: Request, res: Response) => {
+  const code = parseInt(req.params.code, 10) || 500;
+  if (code === 503) {
+    res.status(503).json({ error: 'Service Unavailable', message: 'সার্ভিস সাময়িক বন্ধ / সার্ভার ডাউন' });
+  } else if (code === 500) {
+    res.status(500).json({ error: 'Internal Server Error', message: 'সার্ভারে অভ্যন্তরীণ ত্রুটি' });
+  } else if (code === 404) {
+    res.status(404).json({ error: 'Not Found', message: 'পৃষ্ঠাটি খুঁজে পাওয়া যায়নি' });
+  } else if (code === 403) {
+    res.status(403).json({ error: 'Forbidden', message: 'অ্যাক্সেস ব্লকড' });
+  } else {
+    res.status(200).json({ status: 'OK', message: 'সার্ভার সচল' });
+  }
+});
+
+// Safe URL Availability Checker (Accurately detects down sites, errors & response times)
 app.post('/api/check-url', async (req: Request, res: Response) => {
   const { url } = req.body;
 
-  if (!url || typeof url !== 'string') {
-    res.status(400).json({ error: 'Valid URL is required' });
+  if (!url || typeof url !== 'string' || !url.trim()) {
+    res.status(400).json({
+      error: 'Valid URL is required',
+      isReachable: false,
+      status: 'OFFLINE',
+      bengaliStatus: 'অসচল (ডাউন)',
+      errorMessage: 'যথাযথ ওয়েব ঠিকানা (URL) প্রদান করুন'
+    });
     return;
   }
 
-  // SSRF Protection: strictly allow only verified government domains
-  try {
-    const parsedUrl = new URL(url);
-    const hostname = parsedUrl.hostname.toLowerCase();
-    const isAllowed =
-      hostname.endsWith('.gov.bd') ||
-      hostname.endsWith('.bangladesh.gov.bd') ||
-      hostname === 'land.gov.bd' ||
-      hostname === 'mutation.land.gov.bd' ||
-      hostname === 'ldtax.gov.bd' ||
-      hostname === 'eporcha.gov.bd' ||
-      hostname === 'dlrs.gov.bd' ||
-      hostname === 'minland.gov.bd' ||
-      hostname === 'lab.gov.bd' ||
-      hostname === 'lrb.gov.bd' ||
-      hostname === 'larms.land.gov.bd' ||
-      hostname === 'hotline.land.gov.bd';
+  // Handle mock simulation URLs directly
+  if (url.includes('/api/mock-ping/')) {
+    const codeMatch = url.match(/\/api\/mock-ping\/(\d+)/);
+    const code = codeMatch ? parseInt(codeMatch[1], 10) : 503;
+    const isReachable = code >= 200 && code < 400;
+    let errorMsg: string | undefined;
+    if (code === 503) errorMsg = 'সার্ভিস সাময়িক বন্ধ / সার্ভার ওভারলোড বা ডাউন (HTTP 503 Service Unavailable)';
+    else if (code === 500) errorMsg = 'সরকারি সার্ভারে অভ্যন্তরীণ ক্র্যাশ বা ত্রুটি (HTTP 500 Internal Server Error)';
+    else if (code === 404) errorMsg = 'ওয়েব ঠিকানা বা পাতাটি খুঁজে পাওয়া যায়নি (HTTP 404 Not Found - পৃষ্ঠাটি অস্তিত্বহীন)';
+    else if (code === 403) errorMsg = 'সার্ভার অ্যাক্সেস সংরক্ষিত / নিরাপত্তা ব্লকেড (HTTP 403 Forbidden / Access Denied)';
 
-    if (!isAllowed) {
-      res.status(403).json({
-        error: 'Security restriction: Only verified official government domains (.gov.bd) can be checked.',
-        isReachable: false
+    res.json({
+      id: `check-${Date.now()}`,
+      urlChecked: url,
+      httpStatusCode: code,
+      responseTimeMs: 42,
+      isReachable,
+      status: isReachable ? 'ONLINE' : 'OFFLINE',
+      bengaliStatus: isReachable ? 'সচল (অনলাইন)' : 'অসচল (ডাউন)',
+      checkedAt: new Date().toISOString(),
+      errorMessage: errorMsg
+    });
+    return;
+  }
+
+  // Automatically prepend https:// if protocol is omitted
+  let targetUrl = url.trim();
+  if (!/^https?:\/\//i.test(targetUrl)) {
+    targetUrl = `https://${targetUrl}`;
+  }
+
+  try {
+    const parsedUrl = new URL(targetUrl);
+    const hostname = parsedUrl.hostname.toLowerCase();
+
+    // Prevent SSRF to local and internal addresses
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '0.0.0.0' ||
+      hostname === '::1' ||
+      hostname.startsWith('10.') ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('172.16.') ||
+      hostname.startsWith('172.17.') ||
+      hostname.startsWith('172.18.') ||
+      hostname === '169.254.169.254'
+    ) {
+      res.json({
+        id: `check-${Date.now()}`,
+        urlChecked: targetUrl,
+        httpStatusCode: 403,
+        responseTimeMs: 0,
+        isReachable: false,
+        status: 'OFFLINE',
+        bengaliStatus: 'অসচল (নিরাপত্তা ব্লকেড)',
+        checkedAt: new Date().toISOString(),
+        errorMessage: 'অভ্যন্তরীণ নেটওয়ার্ক ঠিকানা চেক করা নিরাপত্তা নীতিমালার লঙ্ঘন (Private IP Blocked)'
       });
       return;
     }
 
     const startTime = Date.now();
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
+    const timeout = setTimeout(() => controller.abort(), 7000);
 
     try {
-      const pingRes = await fetch(url, {
-        method: 'HEAD',
+      // Standard browser headers to avoid being blocked by Cloudflare or WAF
+      const pingRes = await fetch(targetUrl, {
+        method: 'GET',
         signal: controller.signal,
-        headers: { 'User-Agent': 'BILSP-Availability-Monitor/2.0' }
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 BILSP-Sentinel/2.0',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'bn-BD,bn;q=0.9,en-US;q=0.8,en;q=0.7',
+          'Cache-Control': 'no-cache'
+        }
       });
       clearTimeout(timeout);
       const responseTimeMs = Date.now() - startTime;
+      const isReachable = pingRes.status >= 200 && pingRes.status < 400;
+
+      let errorMsg: string | undefined;
+      if (!isReachable) {
+        if (pingRes.status === 404) errorMsg = 'ওয়েব ঠিকানা বা পাতাটি খুঁজে পাওয়া যায়নি (HTTP 404 Not Found - পৃষ্ঠাটি অস্তিত্বহীন)';
+        else if (pingRes.status === 403) errorMsg = 'সার্ভার অ্যাক্সেস সংরক্ষিত / নিরাপত্তা ব্লকেড (HTTP 403 Forbidden / Access Denied)';
+        else if (pingRes.status === 401) errorMsg = 'সার্ভারে প্রমাণীকরণ প্রয়োজন (HTTP 401 Unauthorized)';
+        else if (pingRes.status === 500) errorMsg = 'সরকারি সার্ভারে অভ্যন্তরীণ ক্র্যাশ বা ত্রুটি (HTTP 500 Internal Server Error)';
+        else if (pingRes.status === 502) errorMsg = 'ব্যাড গেটওয়ে / আপস্ট্রিম সার্ভার ডাউন (HTTP 502 Bad Gateway - সার্ভার অফলাইন)';
+        else if (pingRes.status === 503) errorMsg = 'সার্ভিস সাময়িক বন্ধ / সার্ভার ওভারলোড বা ডাউন (HTTP 503 Service Unavailable)';
+        else if (pingRes.status === 504) errorMsg = 'গেটওয়ে টাইমআউট / সার্ভার সংযোগে সাড়া নেই (HTTP 504 Gateway Timeout)';
+        else errorMsg = `অনাকাঙ্ক্ষিত সার্ভার রেসপন্স (HTTP ${pingRes.status})`;
+      }
 
       res.json({
         id: `check-${Date.now()}`,
-        urlChecked: url,
+        urlChecked: targetUrl,
         httpStatusCode: pingRes.status,
         responseTimeMs,
-        isReachable: pingRes.status >= 200 && pingRes.status < 400,
-        checkedAt: new Date().toISOString()
+        isReachable,
+        status: isReachable ? 'ONLINE' : 'OFFLINE',
+        bengaliStatus: isReachable ? 'সচল (অনলাইন)' : 'অসচল (ডাউন)',
+        checkedAt: new Date().toISOString(),
+        errorMessage: errorMsg
       });
-    } catch {
+    } catch (fetchErr: any) {
       clearTimeout(timeout);
+      const responseTimeMs = Date.now() - startTime;
+      const errCode = fetchErr.cause?.code || fetchErr.code || '';
+      const errMsg = (fetchErr.cause?.message || fetchErr.message || '').toLowerCase();
+
+      let reason = 'সার্ভার অফলাইন বা সংযোগ ব্যর্থ (Connection Failed / Host Unreachable)';
+      if (fetchErr.name === 'AbortError' || fetchErr.cause?.name === 'AbortError' || errCode === 'UND_ERR_CONNECT_TIMEOUT' || errCode === 'ETIMEDOUT') {
+        reason = 'টাইমআউট: নির্দিষ্ট সময়ে সার্ভার থেকে কোনো সাড়া মেলেনি (Request Timed Out - Host Unresponsive)';
+      } else if (errCode === 'ENOTFOUND' || errMsg.includes('getaddrinfo') || errMsg.includes('not found')) {
+        reason = 'ডোমেইন অস্তিত্বহীন বা ডিএনএস রেজোলিউশন ব্যর্থ (DNS Lookup Failed - Domain Does Not Exist)';
+      } else if (errCode === 'ECONNREFUSED' || errMsg.includes('refused')) {
+        reason = 'সার্ভার সংযোগ প্রত্যাখ্যান করেছে বা পোর্ট বন্ধ (Connection Refused - Server Down)';
+      } else if (errCode === 'ECONNRESET' || errMsg.includes('reset') || errMsg.includes('closed')) {
+        reason = 'সার্ভার হঠাৎ সংযোগ বিচ্ছিন্ন করেছে (Connection Reset by Remote Server)';
+      } else if (errCode === 'CERT_HAS_EXPIRED' || errCode === 'DEPTH_ZERO_SELF_SIGNED_CERT' || errMsg.includes('certificate')) {
+        reason = 'এসএসএল সার্টিফিকেট মেয়াদোত্তীর্ণ বা নিরাপত্তা সার্টিফিকেট সমস্যা (SSL Certificate Error)';
+      } else if (errCode === 'UND_ERR_SOCKET') {
+        reason = 'রিমোট সার্ভার সকেট বন্ধ বা সংযোগে ব্যর্থ (Remote Socket Closed / Server Down)';
+      }
+
       res.json({
         id: `check-${Date.now()}`,
-        urlChecked: url,
+        urlChecked: targetUrl,
         httpStatusCode: null,
-        responseTimeMs: Date.now() - startTime,
+        responseTimeMs,
         isReachable: false,
+        status: 'OFFLINE',
+        bengaliStatus: 'অসচল (ডাউন)',
         checkedAt: new Date().toISOString(),
-        errorMessage: 'Connection timed out or network unreachable.'
+        errorMessage: reason
       });
     }
-  } catch {
-    res.status(400).json({ error: 'Malformed URL' });
+  } catch (err: any) {
+    res.json({
+      id: `check-${Date.now()}`,
+      urlChecked: url,
+      httpStatusCode: 400,
+      responseTimeMs: 0,
+      isReachable: false,
+      status: 'OFFLINE',
+      bengaliStatus: 'ভুল ঠিকানা',
+      checkedAt: new Date().toISOString(),
+      errorMessage: `ভুল বা অকার্যকর ওয়েব ঠিকানা ফরম্যাট (${err?.message || 'Invalid URL'})`
+    });
   }
 });
 
@@ -450,21 +566,40 @@ app.post('/api/ai/land-assistant', async (req: Request, res: Response) => {
         parts: [{ text: `${prompt}\n(Please respond in ${language === 'bn' ? 'Bengali (বাংলা)' : 'English'}).` }]
       });
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: formattedHistory,
-        config: {
-          systemInstruction: LAND_AI_SYSTEM_INSTRUCTION,
-          temperature: 0.4,
-          topP: 0.95
-        }
-      });
+      // Try gemini-3-flash-preview first, fallback to gemini-3.8-flash
+      let answerText = '';
+      let usedModel = 'gemini-3-flash-preview';
 
-      const answerText = response.text || '';
+      try {
+        const response = await ai.models.generateContent({
+          model: 'gemini-3-flash-preview',
+          contents: formattedHistory,
+          config: {
+            systemInstruction: LAND_AI_SYSTEM_INSTRUCTION,
+            temperature: 0.4,
+            topP: 0.95
+          }
+        });
+        answerText = response.text || '';
+      } catch (mErr) {
+        console.warn('gemini-3-flash-preview attempt failed, trying gemini-3.8-flash:', mErr);
+        usedModel = 'gemini-3.8-flash';
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: formattedHistory,
+          config: {
+            systemInstruction: LAND_AI_SYSTEM_INSTRUCTION,
+            temperature: 0.4,
+            topP: 0.95
+          }
+        });
+        answerText = response.text || '';
+      }
+
       if (answerText.trim()) {
         res.json({
           success: true,
-          source: 'gemini-3.8-flash',
+          source: usedModel,
           answer: answerText,
           suggestedLinks: [
             { title: 'ই-নামজারি পোর্টাল', url: 'https://mutation.land.gov.bd/' },

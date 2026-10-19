@@ -273,46 +273,67 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  {availabilityResult && (
-                    <span
-                      className={`text-xs px-2.5 py-1 rounded-md font-semibold flex items-center gap-1.5 ${
-                        availabilityResult.isReachable
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-rose-100 text-rose-800'
-                      }`}
-                    >
-                      <span
-                        className={`w-2 h-2 rounded-full ${
-                          availabilityResult.isReachable ? 'bg-emerald-600' : 'bg-rose-600'
-                        }`}
-                      />
-                      <span>
-                        {availabilityResult.isReachable
-                          ? `${language === 'bn' ? 'সচল' : 'Online'} (${availabilityResult.responseTimeMs}ms)`
-                          : language === 'bn'
-                            ? 'অসচল / নেটওয়ার্ক ব্যর্থ'
-                            : 'Unreachable'}
-                      </span>
-                    </span>
-                  )}
-
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <button
                     type="button"
                     onClick={handleLiveCheck}
                     disabled={checkingUrl}
-                    className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold cursor-pointer disabled:opacity-50"
+                    className="px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 text-xs font-semibold cursor-pointer disabled:opacity-50 flex items-center gap-1.5 shadow-2xs"
                   >
-                    {checkingUrl
-                      ? language === 'bn'
-                        ? 'যাচাই করা হচ্ছে...'
-                        : 'Checking...'
-                      : language === 'bn'
-                        ? 'সার্ভার পিং করুন'
-                        : 'Ping Server'}
+                    {checkingUrl ? (
+                      <>
+                        <span className="w-3 h-3 rounded-full border-2 border-emerald-600 border-t-transparent animate-spin" />
+                        <span>{language === 'bn' ? 'যাচাই করা হচ্ছে...' : 'Checking...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Radio className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>{language === 'bn' ? 'লাইভ সার্ভার পিং টেস্ট' : 'Live Ping Test'}</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
+
+              {/* Detailed Live Ping Result Banner */}
+              {availabilityResult && (
+                <div
+                  className={`p-3.5 rounded-xl border flex items-start gap-3 text-xs ${
+                    availabilityResult.isReachable
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                      : 'bg-rose-50 border-rose-200 text-rose-900'
+                  }`}
+                >
+                  <div className="shrink-0 mt-0.5">
+                    {availabilityResult.isReachable ? (
+                      <span className="flex h-3 w-3 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-600"></span>
+                      </span>
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-rose-600" />
+                    )}
+                  </div>
+                  <div className="space-y-0.5 flex-1">
+                    <div className="flex items-center justify-between">
+                      <strong className="font-bold">
+                        {availabilityResult.isReachable
+                          ? (language === 'bn' ? 'সার্ভার সচল ও দ্রুত সাড়া দিচ্ছে (Online)' : 'Server Online & Accessible')
+                          : (language === 'bn' ? 'সার্ভার ডাউন বা নেটওয়ার্ক সংযোগ ব্যর্থ (Offline / Down)' : 'Server Down / Network Failed')}
+                      </strong>
+                      <span className="font-mono text-[11px] opacity-80">
+                        {availabilityResult.responseTimeMs}ms
+                        {availabilityResult.httpStatusCode ? ` • HTTP ${availabilityResult.httpStatusCode}` : ''}
+                      </span>
+                    </div>
+                    {availabilityResult.errorMessage && (
+                      <p className="text-[11px] text-rose-700 font-medium">
+                        {availabilityResult.errorMessage}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Access limitation notes */}
               {service.accessLimitationsBn && (

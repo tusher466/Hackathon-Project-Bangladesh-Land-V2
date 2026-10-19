@@ -6,6 +6,8 @@
  * Styled after the official Bangladesh National Vector Administrative Map.
  */
 
+import officialBoundaries from './officialBangladeshBoundaries.json';
+
 export interface DistrictVector {
   id: string;
   divisionId: string;
@@ -34,6 +36,7 @@ export interface DivisionConfig {
   populationEstimate: string;
   districtIds: string[];
   viewBox: string;
+  path: string; // Seamless continuous boundary path forming authentic Bangladesh silhouette
 }
 
 export const BANGLADESH_DIVISIONS_CONFIG: DivisionConfig[] = [
@@ -44,46 +47,15 @@ export const BANGLADESH_DIVISIONS_CONFIG: DivisionConfig[] = [
     nameEn: 'Rangpur Division',
     color: '#38bdf8',
     borderColor: '#0284c7',
-    centerX: 180,
-    centerY: 110,
+    centerX: (officialBoundaries.divisionCentroids as any)['div-rangpur']?.[0] || 190,
+    centerY: (officialBoundaries.divisionCentroids as any)['div-rangpur']?.[1] || 140,
     districtsCount: 8,
     upazilasCount: 58,
     areaKm2: 16185,
     populationEstimate: '১ কোটি ৭৬ লাখ',
     districtIds: ['dist-panchagarh', 'dist-thakurgaon', 'dist-dinajpur', 'dist-nilphamari', 'dist-lalmonirhat', 'dist-rangpur', 'dist-kurigram', 'dist-gaibandha'],
-    viewBox: '30 10 320 240'
-  },
-  {
-    id: 'div-mymensingh',
-    code: 'MYM',
-    nameBn: 'ময়মনসিংহ বিভাগ',
-    nameEn: 'Mymensingh Division',
-    color: '#2dd4bf',
-    borderColor: '#0f766e',
-    centerX: 365,
-    centerY: 290,
-    districtsCount: 4,
-    upazilasCount: 35,
-    areaKm2: 10584,
-    populationEstimate: '১ কোটি ২৩ লাখ',
-    districtIds: ['dist-mymensingh', 'dist-jamalpur', 'dist-netrokona', 'dist-sherpur'],
-    viewBox: '260 200 230 180'
-  },
-  {
-    id: 'div-sylhet',
-    code: 'SYL',
-    nameBn: 'সিলেট বিভাগ',
-    nameEn: 'Sylhet Division',
-    color: '#34d399',
-    borderColor: '#059669',
-    centerX: 550,
-    centerY: 300,
-    districtsCount: 4,
-    upazilasCount: 41,
-    areaKm2: 12596,
-    populationEstimate: '১ কোটি ২১ লাখ',
-    districtIds: ['dist-sylhet', 'dist-moulvibazar', 'dist-habiganj', 'dist-sunamganj'],
-    viewBox: '410 170 280 230'
+    viewBox: '30 10 320 240',
+    path: (officialBoundaries.divisions as Record<string, string>)['div-rangpur'] || ''
   },
   {
     id: 'div-rajshahi',
@@ -92,14 +64,49 @@ export const BANGLADESH_DIVISIONS_CONFIG: DivisionConfig[] = [
     nameEn: 'Rajshahi Division',
     color: '#fbbf24',
     borderColor: '#d97706',
-    centerX: 160,
-    centerY: 340,
+    centerX: (officialBoundaries.divisionCentroids as any)['div-rajshahi']?.[0] || 179,
+    centerY: (officialBoundaries.divisionCentroids as any)['div-rajshahi']?.[1] || 327,
     districtsCount: 8,
     upazilasCount: 67,
     areaKm2: 18153,
     populationEstimate: '২ কোটি ৩ লাখ',
     districtIds: ['dist-rajshahi', 'dist-bogura', 'dist-pabna', 'dist-sirajganj', 'dist-naogaon', 'dist-natore', 'dist-chapainawabganj', 'dist-joypurhat'],
-    viewBox: '30 200 290 280'
+    viewBox: '30 200 290 280',
+    path: (officialBoundaries.divisions as Record<string, string>)['div-rajshahi'] || ''
+  },
+  {
+    id: 'div-mymensingh',
+    code: 'MYM',
+    nameBn: 'ময়মনসিংহ বিভাগ',
+    nameEn: 'Mymensingh Division',
+    color: '#2dd4bf',
+    borderColor: '#0f766e',
+    centerX: (officialBoundaries.divisionCentroids as any)['div-mymensingh']?.[0] || 385,
+    centerY: (officialBoundaries.divisionCentroids as any)['div-mymensingh']?.[1] || 307,
+    districtsCount: 4,
+    upazilasCount: 35,
+    areaKm2: 10584,
+    populationEstimate: '১ কোটি ২৩ লাখ',
+    districtIds: ['dist-mymensingh', 'dist-jamalpur', 'dist-netrokona', 'dist-sherpur'],
+    viewBox: '260 200 230 180',
+    path: (officialBoundaries.divisions as Record<string, string>)['div-mymensingh'] || ''
+  },
+  {
+    id: 'div-sylhet',
+    code: 'SYL',
+    nameBn: 'সিলেট বিভাগ',
+    nameEn: 'Sylhet Division',
+    color: '#34d399',
+    borderColor: '#059669',
+    centerX: (officialBoundaries.divisionCentroids as any)['div-sylhet']?.[0] || 557,
+    centerY: (officialBoundaries.divisionCentroids as any)['div-sylhet']?.[1] || 329,
+    districtsCount: 4,
+    upazilasCount: 41,
+    areaKm2: 12596,
+    populationEstimate: '১ কোটি ২১ লাখ',
+    districtIds: ['dist-sylhet', 'dist-moulvibazar', 'dist-habiganj', 'dist-sunamganj'],
+    viewBox: '410 170 280 230',
+    path: (officialBoundaries.divisions as Record<string, string>)['div-sylhet'] || ''
   },
   {
     id: 'div-dhaka',
@@ -108,14 +115,15 @@ export const BANGLADESH_DIVISIONS_CONFIG: DivisionConfig[] = [
     nameEn: 'Dhaka Division',
     color: '#10b981',
     borderColor: '#047857',
-    centerX: 370,
-    centerY: 460,
+    centerX: (officialBoundaries.divisionCentroids as any)['div-dhaka']?.[0] || 358,
+    centerY: (officialBoundaries.divisionCentroids as any)['div-dhaka']?.[1] || 431,
     districtsCount: 13,
     upazilasCount: 93,
     areaKm2: 20594,
     populationEstimate: '৪ কোটি ৪২ লাখ',
     districtIds: ['dist-dhaka', 'dist-gazipur', 'dist-narayanganj', 'dist-tangail', 'dist-narsingdi', 'dist-manikganj', 'dist-munshiganj', 'dist-faridpur', 'dist-gopalganj', 'dist-kishoreganj', 'dist-madaripur', 'dist-rajbari', 'dist-shariatpur'],
-    viewBox: '240 310 260 300'
+    viewBox: '240 310 260 300',
+    path: (officialBoundaries.divisions as Record<string, string>)['div-dhaka'] || ''
   },
   {
     id: 'div-khulna',
@@ -124,14 +132,15 @@ export const BANGLADESH_DIVISIONS_CONFIG: DivisionConfig[] = [
     nameEn: 'Khulna Division',
     color: '#818cf8',
     borderColor: '#4f46e5',
-    centerX: 220,
-    centerY: 570,
+    centerX: (officialBoundaries.divisionCentroids as any)['div-khulna']?.[0] || 231,
+    centerY: (officialBoundaries.divisionCentroids as any)['div-khulna']?.[1] || 579,
     districtsCount: 10,
     upazilasCount: 59,
     areaKm2: 22284,
     populationEstimate: '১ কোটি ৭৪ লাখ',
     districtIds: ['dist-khulna', 'dist-jashore', 'dist-satkhira', 'dist-kushtia', 'dist-jhenaidah', 'dist-chuadanga', 'dist-meherpur', 'dist-bagerhat', 'dist-magura', 'dist-narail'],
-    viewBox: '80 370 290 400'
+    viewBox: '80 370 290 400',
+    path: (officialBoundaries.divisions as Record<string, string>)['div-khulna'] || ''
   },
   {
     id: 'div-barishal',
@@ -140,14 +149,15 @@ export const BANGLADESH_DIVISIONS_CONFIG: DivisionConfig[] = [
     nameEn: 'Barishal Division',
     color: '#a78bfa',
     borderColor: '#7c3aed',
-    centerX: 360,
-    centerY: 630,
+    centerX: (officialBoundaries.divisionCentroids as any)['div-barishal']?.[0] || 354,
+    centerY: (officialBoundaries.divisionCentroids as any)['div-barishal']?.[1] || 644,
     districtsCount: 6,
     upazilasCount: 42,
     areaKm2: 13225,
     populationEstimate: '৯১ লাখ',
     districtIds: ['dist-barishal', 'dist-patuakhali', 'dist-bhola', 'dist-pirojpur', 'dist-barguna', 'dist-jhalakathi'],
-    viewBox: '240 480 230 300'
+    viewBox: '240 480 230 300',
+    path: (officialBoundaries.divisions as Record<string, string>)['div-barishal'] || ''
   },
   {
     id: 'div-chattogram',
@@ -156,14 +166,15 @@ export const BANGLADESH_DIVISIONS_CONFIG: DivisionConfig[] = [
     nameEn: 'Chattogram Division',
     color: '#fb7185',
     borderColor: '#e11d48',
-    centerX: 530,
-    centerY: 560,
+    centerX: (officialBoundaries.divisionCentroids as any)['div-chattogram']?.[0] || 572,
+    centerY: (officialBoundaries.divisionCentroids as any)['div-chattogram']?.[1] || 587,
     districtsCount: 11,
     upazilasCount: 103,
     areaKm2: 33909,
     populationEstimate: '৩ কোটি ৩২ লাখ',
     districtIds: ['dist-chattogram', 'dist-coxsbazar', 'dist-cumilla', 'dist-feni', 'dist-brahmanbaria', 'dist-noakhali', 'dist-chandpur', 'dist-lakshmipur', 'dist-rangamati', 'dist-khagrachhari', 'dist-bandarban'],
-    viewBox: '340 340 360 590'
+    viewBox: '340 340 360 590',
+    path: (officialBoundaries.divisions as Record<string, string>)['div-chattogram'] || ''
   }
 ];
 
@@ -206,69 +217,10 @@ function createDistrictPath(centerLat: number, centerLng: number, radiusLat: num
 }
 
 // ========================================================
-// AUTHENTIC BANGLADESH SILHOUETTE & ISLANDS (MATCHING UPLOADED images.jpeg)
-// Exact national silhouette with sage green fill (#9fb896) and crisp border (#1e293b)
+// AUTHENTIC BANGLADESH SILHOUETTE & ISLANDS (FROM OFFICIAL BBS GEOBOUNDARIES)
+// Exact national silhouette containing all 8 continuous divisions
 // ========================================================
-export const BANGLADESH_AUTHENTIC_SILHOUETTE_PATH = `
-  M 152 48
-  C 148 42, 142 38, 144 26
-  C 146 14, 156 12, 162 20
-  C 168 28, 172 40, 185 45
-  C 198 50, 206 42, 218 52
-  C 232 62, 228 82, 235 96
-  C 242 110, 260 115, 272 125
-  C 285 136, 290 152, 298 165
-  C 305 178, 318 190, 322 205
-  C 328 220, 316 226, 312 238
-  C 306 252, 315 264, 320 278
-  C 324 286, 335 285, 342 278
-  C 354 265, 368 255, 385 258
-  C 402 260, 412 275, 425 272
-  C 436 270, 442 258, 452 265
-  C 468 276, 482 270, 498 275
-  C 515 280, 532 276, 548 285
-  C 564 294, 578 308, 592 312
-  C 605 316, 616 308, 624 318
-  C 630 326, 622 342, 618 355
-  C 612 372, 600 388, 592 405
-  C 585 418, 572 428, 565 442
-  C 555 460, 558 478, 562 495
-  C 568 518, 582 538, 588 560
-  C 594 582, 596 605, 602 628
-  C 608 650, 618 672, 622 695
-  C 626 718, 620 740, 624 762
-  C 628 782, 632 805, 628 825
-  C 625 842, 612 855, 604 868
-  C 595 882, 586 898, 578 915
-  C 572 925, 564 918, 562 905
-  C 558 885, 560 862, 555 840
-  C 550 818, 538 800, 530 780
-  C 522 760, 510 742, 498 725
-  C 488 710, 475 700, 465 688
-  C 455 678, 445 682, 440 695
-  C 434 710, 428 728, 420 742
-  C 412 755, 402 762, 395 750
-  C 388 738, 385 718, 380 705
-  C 375 690, 362 682, 355 695
-  C 348 710, 345 730, 338 748
-  C 332 762, 322 768, 314 756
-  C 305 742, 302 725, 295 710
-  C 288 698, 275 690, 268 702
-  C 260 715, 255 735, 246 752
-  C 238 768, 226 772, 218 760
-  C 210 745, 205 725, 198 705
-  C 192 685, 185 665, 180 645
-  C 175 625, 182 602, 185 580
-  C 188 558, 178 535, 172 512
-  C 166 490, 168 468, 162 445
-  C 155 422, 142 405, 135 382
-  C 128 360, 122 338, 115 315
-  C 108 292, 114 270, 118 248
-  C 122 225, 135 205, 140 182
-  C 145 160, 140 138, 142 115
-  C 144 92, 154 70, 152 48
-  Z
-`;
+export const BANGLADESH_AUTHENTIC_SILHOUETTE_PATH = Object.values(officialBoundaries.divisions).join(' ');
 
 export const BANGLADESH_COASTAL_ISLANDS_PATHS = [
   // 1. Bhola Island (Teardrop shape in central delta)
@@ -335,11 +287,72 @@ export const BANGLADESH_COASTAL_ISLANDS_PATHS = [
       C 532 774, 534 762, 536 760
       Z
     `
+  },
+  // 6. St. Martin's Island (Southernmost Coral Island)
+  {
+    id: 'island-stmartin',
+    nameBn: "সেন্ট মার্টিন'স দ্বীপ",
+    path: `
+      M 564 934
+      C 567 928, 574 932, 575 940
+      C 576 948, 572 954, 567 952
+      C 563 950, 562 940, 564 934
+      Z
+    `
+  }
+];
+
+export interface RiverVector {
+  id: string;
+  nameBn: string;
+  nameEn: string;
+  path: string;
+  labelX: number;
+  labelY: number;
+  width: number;
+}
+
+export const BANGLADESH_MAJOR_RIVERS: RiverVector[] = [
+  {
+    id: 'river-jamuna',
+    nameBn: 'যমুনা নদী (ব্রহ্মপুত্র)',
+    nameEn: 'Jamuna River',
+    path: 'M 298 165 C 306 200, 312 238, 314 275 C 316 310, 318 360, 315 425',
+    labelX: 328,
+    labelY: 235,
+    width: 3.5
+  },
+  {
+    id: 'river-padma',
+    nameBn: 'পদ্মা নদী (গঙ্গা)',
+    nameEn: 'Padma River',
+    path: 'M 162 445 C 205 435, 250 425, 315 425 C 335 455, 350 495, 375 545',
+    labelX: 230,
+    labelY: 418,
+    width: 4.0
+  },
+  {
+    id: 'river-meghna',
+    nameBn: 'মেঘনা নদী ও মোহনা',
+    nameEn: 'Meghna River & Estuary',
+    path: 'M 445 425 C 420 460, 395 500, 375 545 C 385 600, 410 655, 435 730',
+    labelX: 410,
+    labelY: 535,
+    width: 5.0
+  },
+  {
+    id: 'river-karnaphuli',
+    nameBn: 'কর্ণফুলী নদী',
+    nameEn: 'Karnaphuli River',
+    path: 'M 585 680 C 560 705, 535 725, 510 742',
+    labelX: 545,
+    labelY: 712,
+    width: 2.5
   }
 ];
 
 // Complete 64 Districts with Accurate Projections and Bengali Labels matching uploaded image
-export const BANGLADESH_64_DISTRICTS_VECTORS: DistrictVector[] = [
+const RAW_BANGLADESH_64_DISTRICTS: DistrictVector[] = [
   // ==========================================
   // 1. DHAKA DIVISION (13 Districts)
   // ==========================================
@@ -1140,3 +1153,15 @@ export const BANGLADESH_64_DISTRICTS_VECTORS: DistrictVector[] = [
     areaKm2: 1363
   }
 ];
+
+// Map all 64 districts with their authentic BBS boundaries and centroids
+export const BANGLADESH_64_DISTRICTS_VECTORS: DistrictVector[] = RAW_BANGLADESH_64_DISTRICTS.map((d) => {
+  const realPath = (officialBoundaries.districts as Record<string, string>)[d.id];
+  const realCentroid = (officialBoundaries.districtCentroids as Record<string, number[]>)[d.id];
+  return {
+    ...d,
+    path: realPath || d.path,
+    centerX: realCentroid ? realCentroid[0] : d.centerX,
+    centerY: realCentroid ? realCentroid[1] : d.centerY
+  };
+});

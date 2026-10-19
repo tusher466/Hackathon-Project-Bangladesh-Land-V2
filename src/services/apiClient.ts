@@ -189,7 +189,7 @@ class ApiClient {
     return this.auditLogs;
   }
 
-  // Live URL Availability Ping with Safe Fallback
+  // Live URL Availability Ping (Accurately reflects real server status & down sites)
   public async checkUrlAvailability(url: string): Promise<ServiceAvailabilityCheck> {
     try {
       const res = await fetch('/api/check-url', {
@@ -197,24 +197,29 @@ class ApiClient {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url })
       });
-      if (res.ok) {
-        return await res.json();
-      }
-    } catch {
-      // Network/CORS fallback
+      const data = await res.json();
+      return {
+        id: data.id || `check-${Date.now()}`,
+        serviceId: '',
+        urlChecked: url,
+        httpStatusCode: data.httpStatusCode !== undefined ? data.httpStatusCode : (res.ok ? 200 : res.status),
+        responseTimeMs: data.responseTimeMs || 0,
+        isReachable: Boolean(data.isReachable),
+        checkedAt: data.checkedAt || new Date().toISOString(),
+        errorMessage: data.errorMessage || (data.isReachable ? undefined : 'সাইটটি অফলাইনে রয়েছে বা সংযোগ ব্যর্থ')
+      };
+    } catch (err: any) {
+      return {
+        id: `check-${Date.now()}`,
+        serviceId: '',
+        urlChecked: url,
+        httpStatusCode: null,
+        responseTimeMs: 0,
+        isReachable: false,
+        checkedAt: new Date().toISOString(),
+        errorMessage: 'নেটওয়ার্ক সংযোগ ব্যর্থ বা সাইট অফলাইনে রয়েছে (Connection Refused/Offline)'
+      };
     }
-
-    // Client-side simulation of reachability for known verified government URLs
-    const isGovDomain = url.includes('.gov.bd') || url.includes('land.gov.bd');
-    return {
-      id: `check-${Date.now()}`,
-      serviceId: '',
-      urlChecked: url,
-      httpStatusCode: isGovDomain ? 200 : 404,
-      responseTimeMs: Math.floor(Math.random() * 200) + 120,
-      isReachable: isGovDomain,
-      checkedAt: new Date().toISOString()
-    };
   }
 
   // Admin: Update service details or verification

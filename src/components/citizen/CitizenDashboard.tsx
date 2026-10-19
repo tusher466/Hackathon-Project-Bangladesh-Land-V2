@@ -72,6 +72,10 @@ export const CitizenDashboard: React.FC<CitizenDashboardProps> = ({
   const [showAminModal, setShowAminModal] = useState<boolean>(false);
   const [showDeedOrderModal, setShowDeedOrderModal] = useState<boolean>(false);
   const [showAIModal, setShowAIModal] = useState<boolean>(false);
+  const [showAddRecordModal, setShowAddRecordModal] = useState<boolean>(false);
+  const [newRecordType, setNewRecordType] = useState('ই-নামজারি খতিয়ান');
+  const [newRecordNumber, setNewRecordNumber] = useState('');
+  const [newRecordMouza, setNewRecordMouza] = useState('');
 
   // Saved user records in Citizen Locker
   const [savedRecords, setSavedRecords] = useState([
@@ -658,8 +662,8 @@ export const CitizenDashboard: React.FC<CitizenDashboardProps> = ({
 
             <button
               type="button"
-              onClick={() => alert(language === 'bn' ? 'নতুন খতিয়ান বা দাখিলা যুক্ত করার ডায়ালগ খোলা হয়েছে।' : 'Add new record dialogue opened.')}
-              className="px-4 py-2 rounded-xl bg-[#006a4e] hover:bg-emerald-800 text-white text-xs font-bold cursor-pointer"
+              onClick={() => setShowAddRecordModal(true)}
+              className="px-4 py-2 rounded-xl bg-[#006a4e] hover:bg-emerald-800 text-white text-xs font-bold cursor-pointer transition-colors shadow-2xs"
             >
               {language === 'bn' ? '+ নতুন রেকর্ড যুক্ত করুন' : '+ Add Record'}
             </button>
@@ -741,6 +745,104 @@ export const CitizenDashboard: React.FC<CitizenDashboardProps> = ({
         isOpen={showAIModal}
         onClose={() => setShowAIModal(false)}
       />
+
+      {/* Add New Record Modal for Citizen Locker */}
+      {showAddRecordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden">
+            <div className="p-4 bg-[#006a4e] text-white flex items-center justify-between">
+              <h3 className="font-bold text-sm">
+                {language === 'bn' ? 'ডিজিটাল লকারে নতুন রেকর্ড সংরক্ষণ' : 'Add Record to Digital Locker'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddRecordModal(false)}
+                className="text-white/80 hover:text-white cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!newRecordNumber.trim()) return;
+                const newRec = {
+                  id: `rec-${Date.now()}`,
+                  type: newRecordType,
+                  number: newRecordNumber,
+                  mouza: newRecordMouza || (language === 'bn' ? 'সেগুনবাগিচা, দাগ ১২০৪' : 'Segunbagicha, Plot 1204'),
+                  date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+                  status: language === 'bn' ? 'যাচাইকৃত ও সক্রিয়' : 'Verified & Active'
+                };
+                setSavedRecords((prev) => [newRec, ...prev]);
+                setNewRecordNumber('');
+                setNewRecordMouza('');
+                setShowAddRecordModal(false);
+              }}
+              className="p-5 space-y-3 text-xs"
+            >
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  {language === 'bn' ? 'রেকর্ডের ধরন' : 'Record Type'}
+                </label>
+                <select
+                  value={newRecordType}
+                  onChange={(e) => setNewRecordType(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 text-slate-900 font-medium"
+                >
+                  <option value="ই-নামজারি খতিয়ান">ই-নামজারি খতিয়ান (Mutation)</option>
+                  <option value="ভূমি কর দাখিলা (LD Tax)">ভূমি কর দাখিলা (LD Tax e-Dakhila)</option>
+                  <option value="সিএস / এসএ / আরএস খতিয়ান">সিএস / এসএ / আরএস খতিয়ান (CS/SA/RS)</option>
+                  <option value="রেজিস্ট্রিকৃত সাব-কবলা দলিল">রেজিস্ট্রিকৃত সাব-কবলা দলিল (Deed)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  {language === 'bn' ? 'খতিয়ান / দাখিলা / দলিল নম্বর' : 'Reference / Record Number'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newRecordNumber}
+                  onChange={(e) => setNewRecordNumber(e.target.value)}
+                  placeholder={language === 'bn' ? 'যেমন: খতিয়ান নং ৭৪২ বা দাখিলা নং ৯৮০১' : 'e.g. Khatian #742 or Receipt #9801'}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 text-slate-900 font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  {language === 'bn' ? 'মৌজা ও দাগ নম্বর' : 'Mouza & Plot / Dag Number'}
+                </label>
+                <input
+                  type="text"
+                  value={newRecordMouza}
+                  onChange={(e) => setNewRecordMouza(e.target.value)}
+                  placeholder={language === 'bn' ? 'যেমন: ধানমন্ডি মৌজা, দাগ নং ৩১২' : 'e.g. Dhanmondi, Dag #312'}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 text-slate-900 font-medium"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddRecordModal(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 font-bold cursor-pointer hover:bg-slate-50"
+                >
+                  {language === 'bn' ? 'বাতিল' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-[#006a4e] text-white font-bold hover:bg-emerald-800 cursor-pointer shadow-2xs"
+                >
+                  {language === 'bn' ? 'লকারে যোগ করুন' : 'Save to Locker'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
