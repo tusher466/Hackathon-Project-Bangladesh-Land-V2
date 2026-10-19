@@ -50,13 +50,10 @@ export const Header: React.FC<HeaderProps> = ({
 
   const navItems = [
     { id: 'home', label: t('navHome'), icon: Layers },
-    { id: 'bhumisutra', label: language === 'bn' ? 'ভূমিসূত্র' : 'BhumiSutra', icon: Sparkles, isHighlight: true },
-    { id: 'interactive-map', label: language === 'bn' ? 'ইন্টারেক্টিভ মানচিত্র' : 'Interactive Map', icon: Map },
     { id: 'services', label: t('navAllServices'), icon: Search },
+    { id: 'interactive-map', label: language === 'bn' ? 'ইন্টারেক্টিভ মানচিত্র' : 'Interactive Map', icon: Map },
     { id: 'tasks', label: t('navBrowseTask'), icon: ExternalLink },
     { id: 'institutions', label: t('navInstitutions'), icon: Building2 },
-    { id: 'offices', label: t('navFindOffice'), icon: MapPin },
-    { id: 'helpline', label: t('navHelpline'), icon: PhoneCall },
   ];
 
   const handleNavClick = (viewId: string) => {
